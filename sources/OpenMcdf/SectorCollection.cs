@@ -7,8 +7,6 @@
  * The Initial Developer of the Original Code is Federico Blaseotto.*/
 
 using System;
-using System.Text;
-using System.Collections;
 using System.Collections.Generic;
 
 namespace OpenMcdf
@@ -34,7 +32,7 @@ namespace OpenMcdf
 
         public event Ver3SizeLimitReached OnVer3SizeLimitReached;
 
-        private List<ArrayList> largeArraySlices = new List<ArrayList>();
+        private List<List<Sector>> largeArraySlices = new();
 
         public SectorCollection()
         {
@@ -79,7 +77,7 @@ namespace OpenMcdf
 
                 if ((index > -1) && (index < count))
                 {
-                    return (Sector)largeArraySlices[itemIndex][itemOffset];
+                    return largeArraySlices[itemIndex][itemOffset];
                 }
                 else
                     throw new CFException("Argument Out of Range, possibly corrupted file", new ArgumentOutOfRangeException("index", index, "Argument out of range"));
@@ -115,8 +113,7 @@ namespace OpenMcdf
             }
             else
             {
-                ArrayList ar = new ArrayList(SLICE_SIZE);
-                ar.Add(item);
+                var ar = new List<Sector>(SLICE_SIZE) { item };
                 largeArraySlices.Add(ar);
                 count++;
             }
@@ -134,7 +131,7 @@ namespace OpenMcdf
 
         public void Clear()
         {
-            foreach (ArrayList slice in largeArraySlices)
+            foreach (var slice in largeArraySlices)
             {
                 slice.Clear();
             }
@@ -183,7 +180,7 @@ namespace OpenMcdf
             {
                 for (int j = 0; j < largeArraySlices[i].Count; j++)
                 {
-                    yield return (Sector)largeArraySlices[i][j];
+                    yield return largeArraySlices[i][j];
 
                 }
             }
