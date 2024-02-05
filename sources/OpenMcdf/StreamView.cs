@@ -203,6 +203,77 @@ namespace OpenMcdf
 
         }
 
+        public override int Read(Span<byte> buffer)
+        {
+            if (sectorChain == null || sectorChain.Count == 0)
+                return 0;
+
+            // Don't try to read more bytes than this stream contains.
+            int intMax = (int)Math.Min(Int32.MaxValue, length);
+            var count = Math.Min(intMax, buffer.Length);
+            count = Math.Min(count, (int)(length - position));
+
+            // First sector
+            int secIndex = (int)(position / (long)sectorSize);
+
+            // Bytes to read count is the min between request count
+            // and sector border
+            var nToRead = Math.Min(
+                sectorChain[0].Size - ((int)position % sectorSize),
+                count);
+
+            if (secIndex < sectorChain.Count)
+            {
+                var writeBuffer = buffer.Slice(0, nToRead);
+                CopyToBuffer(sectorChain[secIndex], writeBuffer, (int)(position % sectorSize));
+            }
+
+            var nRead = nToRead;
+            secIndex++;
+
+            // Central sectors
+            while (nRead < (count - sectorSize))
+            {
+                nToRead = sectorSize;
+
+                var writeBuffer = buffer.Slice(nRead, nToRead);
+                CopyToBuffer(sectorChain[secIndex], writeBuffer, 0);
+
+                nRead += nToRead;
+                secIndex++;
+            }
+
+            // Last sector
+            nToRead = count - nRead;
+
+            if (nToRead != 0)
+            {
+                if (secIndex > sectorChain.Count) throw new CFCorruptedFileException("The file is probably corrupted.");
+
+                var writeBuffer = buffer.Slice(nRead, nToRead);
+                CopyToBuffer(sectorChain[secIndex], writeBuffer, 0);
+
+                nRead += nToRead;
+            }
+
+            position += nRead;
+
+            return nRead;
+        }
+
+        private void CopyToBuffer(Sector sector, Span<byte> buffer, int start)
+        {
+            if (sector.IsStreamed)
+            {
+                stream.Seek((long)sector.Size + (long)sector.Id * (long)sector.Size + start, SeekOrigin.Begin);
+                stream.Read(buffer);
+            }
+            else
+            {
+                
+            }
+        }
+
         public override long Seek(long offset, SeekOrigin origin)
         {
             switch (origin)

@@ -30,6 +30,8 @@ namespace OpenMcdf
             this.DirEntry = dirEntry;
         }
 
+        public ContentStream CreateContentStream() => new ContentStream(CompoundFile, DirEntry);
+
         /// <summary>
         /// Set the data associated with the stream object.
         /// </summary>

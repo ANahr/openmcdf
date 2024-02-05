@@ -2509,6 +2509,19 @@ namespace OpenMcdf
             return result;
         }
 
+        internal StreamView CreateStreamView(IDirectoryEntry directoryEntry)
+        {
+            //count = (int)Math.Min((long)(buffer.Length - offset), (long)count);
+
+            StreamView sView;
+            if (directoryEntry.Size < header.MinSizeStandardStream)
+                sView = new StreamView(GetSectorChain(directoryEntry.StartSetc, SectorType.Mini), Sector.MINISECTOR_SIZE, directoryEntry.Size, null, sourceStream);
+            else
+                sView = new StreamView(GetSectorChain(directoryEntry.StartSetc, SectorType.Normal), GetSectorSize(), directoryEntry.Size, null, sourceStream);
+
+            return sView;
+        }
+
 
         internal byte[] GetData(CFStream cFStream)
         {

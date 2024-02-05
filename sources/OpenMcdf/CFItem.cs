@@ -39,7 +39,7 @@ namespace OpenMcdf
     {
         private CompoundFile compoundFile;
 
-        protected CompoundFile CompoundFile
+        internal CompoundFile CompoundFile
         {
             get { return compoundFile; }
         }
